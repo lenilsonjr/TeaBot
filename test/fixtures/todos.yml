@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  todo: MyString
+  completed: false
+  deleted: 
+  username: MyString
+
+two:
+  todo: MyString
+  completed: false
+  deleted: 
+  username: MyString

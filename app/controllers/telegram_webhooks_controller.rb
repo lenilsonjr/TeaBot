@@ -5,9 +5,9 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   # Every update can have one of: message, inline_query, chosen_inline_result,
   # callback_query, etc.
   # Define method with same name to respond to this updates.
-  def message(message)
-    message == self.payload
-  end
+  #def message(message)
+  #  message == self.payload
+  #end
 
   def start(data = nil, *)
     response = from ? "🚧 Olá, #{from['username']}!\n👉 Use /help para ver o que eu posso fazer!" : "🚧 Olá, pessoas!\n👉 Usem /help para ver o que eu posso fazer!"
@@ -15,8 +15,27 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def help(data = nil, *)
-    response = "🚧 👉 Use /todo para adicionar um afazer\n✅ 👉 Use /done <texto do afazer> para completar um afazer\n❌ 👉 Use /remove <texto do afazer> para deletar um afazer\n📑 👉 Use /todos para listar todos seus afazeres"
+    response = "🚧 👉 Use /todo para adicionar um afazer\n✅ 👉 Use /done <texto do afazer> ou /done <id do afazer> para completar um afazer\n❌ 👉 Use /remove <texto do afazer> para deletar um afazer\n📑 👉 Use /todos para listar todos seus afazeres"
     respond_with :message, text: response
+  end
+
+  def todo(*todo)
+    todo = todo.join(" ")
+    Todo.create(todo: todo, username: from['username'] )
+    response = "🚧 '#{todo}' adicionado para @#{from['username']}! Do it! 🚀"
+    respond_with :message, text: response
+  end
+
+  def done
+
+  end
+
+  def remove
+
+  end
+
+  def todos
+
   end
 
   private
