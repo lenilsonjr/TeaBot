@@ -91,7 +91,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       response  = "👉 Esses são seus afazeres, @#{from['username']}:\n\n"
 
       @tasks.each do |todo|
-        response += "🚧 #{todo.id } - #{todo.todo}, adicionado em #{relative_date(todo.created_at)}\n"
+        response += "🚧 #{todo.id } - #{todo.todo}, adicionado #{relative_date(todo.created_at.to_date)}\n"
       end
 
       response += "\nGo do it! 🚀"
@@ -105,20 +105,20 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     def relative_date(date)
 
       if date.nil?
-        "Sem data"
+        "fora do contínuo espaço e tempo"
       elsif date == Time.current.to_date
-        "Hoje"
+        "hoje"
       elsif date == Date.yesterday
-        "Ontem"
+        "ontem"
       elsif date == Date.tomorrow
-        "Amanhã"
+        "amanhã"
       elsif date && (date > Time.current.to_date - 7.days) && (date < Date.yesterday)
-        l(date, format: '%A')
+        l(date, format: '%A').downcase
       else
         if date.year == Date.today.year
-          l(date, format: '%-d de %B')
+          l(date, format: 'dia %-d de %B').downcase
         else
-          l(date, format: '%-d de %B de %Y')
+          l(date, format: 'dia %-d de %B de %Y').downcase
         end
       end  
 
