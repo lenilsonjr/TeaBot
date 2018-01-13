@@ -14,5 +14,6 @@
 !/tmp/.keep
 /config/database.yml
 /config/secrets.yml
+/config/environments/production.rb
 
 .byebug_history
