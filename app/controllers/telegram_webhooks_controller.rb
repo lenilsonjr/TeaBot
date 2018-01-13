@@ -2,13 +2,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
   around_action :with_locale
 
-  # Every update can have one of: message, inline_query, chosen_inline_result,
-  # callback_query, etc.
-  # Define method with same name to respond to this updates.
-  #def message(message)
-  #  message == self.payload
-  #end
-
   def start(data = nil, *)
     response = from ? "🚧 Olá, #{from['username']}!\n👉 Use /help para ver o que eu posso fazer!" : "🚧 Olá, pessoas!\n👉 Usem /help para ver o que eu posso fazer!"
     respond_with :message, text: response
@@ -20,26 +13,117 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def todo(*todo)
+    respond_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
+
     todo = todo.join(" ")
-    Todo.create(todo: todo, username: from['username'] )
-    response = "🚧 '#{todo}' adicionado para @#{from['username']}! Do it! 🚀"
+    @task = Todo.new(todo: todo, username: from['username'] )
+    
+    if @task.save
+      response = "🚧 '#{todo}' adicionado para @#{from['username']}! Do it! 🚀"
+    else
+      response  = "😱 Estou com mal funcionamento e não consegui adicionar o afazer, @#{from['username']}! Chame um humano."
+    end
+      
     respond_with :message, text: response
   end
 
-  def done
+  def done(*todo)
+    respond_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
 
+    todo = todo.join(" ")
+
+    if todo.to_s =~ /\A[-+]?\d*\.?\d+\z/
+      @task = Todo.where(id: todo, username: from['username'], deleted: false, completed: false)
+    else
+      @task = Todo.where(todo: todo, username: from['username'], deleted: false, completed: false)
+    end
+
+    if @task.empty?
+      response  = "👉 Afazer não encontrado, @#{from['username']}! 😱"
+    else
+      @task = @task.first
+      if @task.update(completed: true)
+        response  = "✅ @#{from['username']} completou #{@task.todo}! Keep Rocking! 🚀\n\n👉 Use /todos para ver os pendentes."    
+      else
+        response  = "😱 Estou com mal funcionamento e não consegui completar o afazer, @#{from['username']}! Chame um humano."
+      end
+    end
+
+    respond_with :message, text: response
   end
 
-  def remove
+  def remove(*todo)
+    respond_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
 
+    todo = todo.join(" ")
+
+    if todo.to_s =~ /\A[-+]?\d*\.?\d+\z/
+      @task = Todo.where(id: todo, username: from['username'], deleted: false, completed: false)
+    else
+      @task = Todo.where(todo: todo, username: from['username'], deleted: false, completed: false)
+    end
+
+    if @task.empty?
+      response  = "👉 Afazer não encontrado, @#{from['username']}! 😱"
+    else
+      @task = @task.first
+      if @task.update(deleted: true)
+        response  = "✅ @#{from['username']} removeu #{@task.todo}.\n\n👉 Use /todos para ver os pendentes."    
+      else
+        response  = "😱 Estou com mal funcionamento e não consegui remover o afazer, @#{from['username']}! Chame um humano."
+      end
+    end
+
+    respond_with :message, text: response
   end
 
-  def todos
+  def todos(data = nil, *)
+    respond_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
 
+    @tasks = Todo.where(username: from['username'], completed: false, deleted: false)
+
+    if @tasks.empty?
+
+      response = "⚠️ Você não tem nenhum afazer, @#{from['username']}!\n\nDeixe de ser vagabundo e adicione um usando /todo <afazer> 🚧"
+
+    else
+
+      response  = "👉 Esses são seus afazeres, @#{from['username']}:\n\n"
+
+      @tasks.each do |todo|
+        response += "🚧 #{todo.id } - #{todo.todo}, adicionado em #{relative_date(todo.created_at)}\n"
+      end
+
+      response += "\nGo do it! 🚀"
+    end
+
+    respond_with :message, text: response
   end
 
   private
-  
+
+    def relative_date(date)
+
+      if date.nil?
+        "Sem data"
+      elsif date == Time.current.to_date
+        "Hoje"
+      elsif date == Date.yesterday
+        "Ontem"
+      elsif date == Date.tomorrow
+        "Amanhã"
+      elsif date && (date > Time.current.to_date - 7.days) && (date < Date.yesterday)
+        l(date, format: '%A')
+      else
+        if date.year == Date.today.year
+          l(date, format: '%-d de %B')
+        else
+          l(date, format: '%-d de %B de %Y')
+        end
+      end  
+
+    end
+
     def with_locale(&block)
       I18n.with_locale(locale_for_update, &block)
     end
