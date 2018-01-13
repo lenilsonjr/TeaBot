@@ -4,7 +4,7 @@ class CreateTodos < ActiveRecord::Migration[5.1]
       t.string :todo
       t.boolean :completed, default: false
       t.boolean :deleted, default: false
-      t.string :username
+      t.string :username, index: true
 
       t.timestamps
     end

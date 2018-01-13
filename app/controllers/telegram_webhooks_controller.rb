@@ -8,7 +8,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def help(data = nil, *)
-    response = "🚧 👉 Use /todo para adicionar um afazer\n✅ 👉 Use /done <texto do afazer> ou /done <id do afazer> para completar um afazer\n❌ 👉 Use /remove <texto do afazer> para deletar um afazer\n📑 👉 Use /todos para listar todos seus afazeres"
+    response = "🚧 👉 Use /todo para adicionar um afazer\n✅ 👉 Use /complete <texto do afazer> ou /complete <id do afazer> para completar um afazer\n❌ 👉 Use /remove <texto do afazer> para deletar um afazer\n📑 👉 Use /todos para listar todos seus afazeres\n⏰ 👉 Use /done para ver o que você fez nas últimas 24hrs\n🏎️ 👉 Use /leaderboard para ver os topzeras que mais fazem coisas"
     respond_with :message, text: response
   end
 
@@ -27,7 +27,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     respond_with :message, text: response
   end
 
-  def done(*todo)
+  def complete(*todo)
     respond_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
 
     todo = todo.join(" ")
@@ -96,6 +96,52 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
       response += "\nGo do it! 🚀"
     end
+
+    respond_with :message, text: response
+  end
+
+  def done(data = nil, *)
+    respond_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
+
+    @tasks = Todo.where(username: from['username'], completed: true, deleted: false, updated_at: (Time.now - 24.hours)..Time.now)
+
+    if @tasks.empty?
+
+      response = "⚠️ Você não fez nada nas últimas 24hrs, @#{from['username']}!\n\nDeixe de ser vagabundo e use /todos para ver seus afazeres 🚧"
+
+    else
+
+      response  = "👉 Você completou #{@tasks.count} afazeres nas últimas 24hrs, @#{from['username']}:\n\n"
+
+      @tasks.each do |todo|        
+        response += "✅ #{todo.todo}, adicionado #{relative_date(todo.created_at.to_date)}.\n"
+      end
+
+      response += "\nKeep Rocking! 🚀"
+    end
+
+    respond_with :message, text: response
+  end
+
+  def leaderboard(data = nil, *)
+    @users = Todo.where(completed: true, deleted: false, updated_at: (Time.now - 24.hours)..Time.now).group(:username)
+
+    response = "🚧 Quem mais fez coisas nas últimas 24 horas:\n"
+    @users.each do |user|        
+      count = Todo.where(completed: true, deleted: false, updated_at: (Time.now - 24.hours)..Time.now, username: user.username).count
+      response += "👷 #{user.username} - #{count} afazeres\n"
+    end
+
+    puts @users
+
+    @users = Todo.where(completed: true, deleted: false).group(:username)
+    response += "\n\n🚧 Quem mais fez coisas desde sempre:\n"
+    @users.each do |user|
+      count = Todo.where(completed: true, deleted: false, username: user.username).count
+      response += "👷 #{user.username} - #{count} afazeres\n"
+    end
+
+    response += "\nKeep Rocking! 🚀"
 
     respond_with :message, text: response
   end
