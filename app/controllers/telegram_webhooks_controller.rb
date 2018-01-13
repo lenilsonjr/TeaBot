@@ -32,21 +32,19 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
     todo = todo.join(" ")
 
+    #Check if user has given an ID
     if todo.to_s =~ /\A[-+]?\d*\.?\d+\z/
-      @task = Todo.where(id: todo, username: from['username'], deleted: false, completed: false)
+      @task = Todo.where(username: from['username'], completed: false, deleted: false)[todo.to_i - 1]
     else
-      @task = Todo.where(todo: todo, username: from['username'], deleted: false, completed: false)
+      @task = Todo.where(todo: todo, username: from['username'], deleted: false, completed: false).first
     end
 
-    if @task.empty?
-      response  = "👉 Afazer não encontrado, @#{from['username']}! 😱"
+    if @task.nil?
+      response = "👉 Afazer não encontrado, @#{from['username']}! 😱" if @task.nil?
+    elsif @task.update(completed: true)
+      response  = "✅ @#{from['username']} completou #{@task.todo}! Keep Rocking! 🚀\n\n👉 Use /todos para ver os pendentes."    
     else
-      @task = @task.first
-      if @task.update(completed: true)
-        response  = "✅ @#{from['username']} completou #{@task.todo}! Keep Rocking! 🚀\n\n👉 Use /todos para ver os pendentes."    
-      else
-        response  = "😱 Estou com mal funcionamento e não consegui completar o afazer, @#{from['username']}! Chame um humano."
-      end
+      response  = "😱 Estou com mal funcionamento e não consegui completar o afazer, @#{from['username']}! Chame um humano."
     end
 
     respond_with :message, text: response
@@ -90,8 +88,10 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
       response  = "👉 Esses são seus afazeres, @#{from['username']}:\n\n"
 
-      @tasks.each do |todo|
-        response += "🚧 #{todo.id } - #{todo.todo}, adicionado #{relative_date(todo.created_at.to_date)}\n"
+      i = 1
+      @tasks.each do |todo|        
+        response += "🚧 #{i} - #{todo.todo}, adicionado #{relative_date(todo.created_at.to_date)}.\n"
+        i = i + 1
       end
 
       response += "\nGo do it! 🚀"
