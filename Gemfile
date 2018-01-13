@@ -30,6 +30,15 @@ gem 'telegram-bot'
 # gem 'rack-cors'
 
 group :development, :test do
+  gem 'capistrano'
+  gem 'capistrano-bundler'
+  gem 'capistrano-passenger', '>= 0.1.1'
+
+  # Remove the following if your app does not use Rails
+  gem 'capistrano-rails'
+
+  # Remove the following if your server does not use RVM
+  gem 'capistrano-rvm'
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
 end

@@ -15,5 +15,7 @@
 /config/database.yml
 /config/secrets.yml
 /config/environments/production.rb
+/config/deploy.rb
+/config/deploy/production.rb
 
 .byebug_history
