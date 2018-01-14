@@ -19,6 +19,7 @@ ActiveRecord::Schema.define(version: 20180113212129) do
     t.string "username"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["username"], name: "index_todos_on_username"
   end
 
 end
