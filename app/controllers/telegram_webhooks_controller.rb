@@ -19,7 +19,11 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     @task = Todo.new(todo: todo, username: from['username'] )
     
     if @task.save
-      bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
+      begin
+        bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
+      rescue Exception
+        puts "Can't delete message"
+      end
       response = "🚧 '#{todo}' adicionado para @#{from['username']}! Do it! 🚀"
     else
       response  = "😱 Estou com mal funcionamento e não consegui adicionar o afazer, @#{from['username']}! Chame um humano."
@@ -45,7 +49,11 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       response = "👉 Afazer não encontrado, @#{from['username']}! 😱" if @task.nil?
       reply_with :message, text: response
     elsif @task.update(completed: true)
-      bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
+      begin
+        bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
+      rescue Exception
+        puts "Can't delete message"
+      end
       response  = "✅ @#{from['username']} completou #{@task.todo}! Keep Rocking! 🚀\n\n👉 Use /todos para ver os pendentes."    
     else
       response  = "😱 Estou com mal funcionamento e não consegui completar o afazer, @#{from['username']}! Chame um humano."
@@ -71,7 +79,11 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       response = "👉 Afazer não encontrado, @#{from['username']}! 😱" if @task.nil?
       reply_with :message, text: response
     elsif @task.update(deleted: true)
-      bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
+      begin
+        bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
+      rescue Exception
+        puts "Can't delete message"
+      end
       response  = "✅ @#{from['username']} removeu #{@task.todo}.\n\n👉 Use /todos para ver os pendentes."    
     else
       response  = "😱 Estou com mal funcionamento e não consegui remmover o afazer, @#{from['username']}! Chame um humano."
@@ -83,7 +95,11 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
   def todos(data = nil, *)
     reply_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
-    bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
+    begin
+      bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
+    rescue Exception
+      puts "Can't delete message"
+    end
 
     @tasks = Todo.where(username: from['username'], completed: false, deleted: false)
 
@@ -109,7 +125,11 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
   def done(data = nil, *)
     reply_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
-    bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
+    begin
+      bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
+    rescue Exception
+      puts "Can't delete message"
+    end
 
     @tasks = Todo.where(username: from['username'], completed: true, deleted: false, updated_at: (Time.now - 24.hours)..Time.now)
 
@@ -132,7 +152,11 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def leaderboard(data = nil, *)
-    bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
+    begin
+      bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
+    rescue Exception
+      puts "Can't delete message"
+    end
     @users = Todo.where(completed: true, deleted: false, updated_at: (Time.now - 24.hours)..Time.now).group(:username).limit(10)
 
     response = "🚧 Quem mais fez coisas nas últimas 24 horas:\n"
@@ -163,7 +187,11 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       response = "👉 Afazer não encontrado, @#{from['username']}! 😱" if @task.nil?
       reply_with :message, text: response
     elsif @task.update(completed: false, deleted: false)
-      bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
+      begin
+        bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
+      rescue Exception
+        puts "Can't delete message"
+      end
       response  = "✅ @#{from['username']} desfez #{@task.todo}!\n\n👉 Use /todos para ver os pendentes."    
     else
       response  = "😱 Estou com mal funcionamento e não consegui desfazer o afazer, @#{from['username']}! Chame um humano."
