@@ -138,14 +138,14 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     response = "🚧 Quem mais fez coisas nas últimas 24 horas:\n"
     @users.reverse.each do |user|
       count = Todo.where(completed: true, deleted: false, updated_at: (Time.now - 24.hours)..Time.now, username: user.username).count
-      response += "👷 #{user.username} - #{count} afazeres\n"
+      response += "👷 @#{user.username} - #{count} afazeres\n"
     end
 
     @users = Todo.where(completed: true, deleted: false).group(:username).limit(10)
     response += "\n\n🚧 Quem mais fez coisas desde sempre:\n"
     @users.reverse.each do |user|
       count = Todo.where(completed: true, deleted: false, username: user.username).count
-      response += "👷 #{user.username} - #{count} afazeres\n"
+      response += "👷 @#{user.username} - #{count} afazeres\n"
     end
 
     response += "\nKeep Rocking! 🚀"
