@@ -153,6 +153,26 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     respond_with :message, text: response
   end
 
+
+  def undo(data = nil, *)
+    reply_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
+
+    @task = Todo.where(completed: true, deleted: false, updated_at: (Time.now - 24.hours)..Time.now, username: from['username']).order("updated_at DESC").limit(1).first
+
+    if @task.nil?
+      response = "👉 Afazer não encontrado, @#{from['username']}! 😱" if @task.nil?
+      reply_with :message, text: response
+    elsif @task.update(completed: false, deleted: false)
+      bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
+      response  = "✅ @#{from['username']} desfez #{@task.todo}!\n\n👉 Use /todos para ver os pendentes."    
+    else
+      response  = "😱 Estou com mal funcionamento e não consegui desfazer o afazer, @#{from['username']}! Chame um humano."
+      reply_with :message, text: response
+    end
+
+    respond_with :message, text: response
+  end
+
   private
 
     def relative_date(date)
