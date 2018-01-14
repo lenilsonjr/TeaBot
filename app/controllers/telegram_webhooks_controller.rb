@@ -128,22 +128,22 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       response += "\nKeep Rocking! 🚀"
     end
 
-    reply_with :message, text: response
+    respond_with :message, text: response
   end
 
   def leaderboard(data = nil, *)
     bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
-    @users = Todo.where(completed: true, deleted: false, updated_at: (Time.now - 24.hours)..Time.now).group(:username)
+    @users = Todo.where(completed: true, deleted: false, updated_at: (Time.now - 24.hours)..Time.now).group(:username).limit(10)
 
     response = "🚧 Quem mais fez coisas nas últimas 24 horas:\n"
-    @users.each do |user|        
+    @users.reverse.each do |user|
       count = Todo.where(completed: true, deleted: false, updated_at: (Time.now - 24.hours)..Time.now, username: user.username).count
       response += "👷 #{user.username} - #{count} afazeres\n"
     end
 
-    @users = Todo.where(completed: true, deleted: false).group(:username)
+    @users = Todo.where(completed: true, deleted: false).group(:username).limit(10)
     response += "\n\n🚧 Quem mais fez coisas desde sempre:\n"
-    @users.each do |user|
+    @users.reverse.each do |user|
       count = Todo.where(completed: true, deleted: false, username: user.username).count
       response += "👷 #{user.username} - #{count} afazeres\n"
     end
