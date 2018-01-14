@@ -60,24 +60,22 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
     todo = todo.join(" ")
 
+    #Check if user has given an ID
     if todo.to_s =~ /\A[-+]?\d*\.?\d+\z/
-      @task = Todo.where(id: todo, username: from['username'], deleted: false, completed: false)
+      @task = Todo.where(username: from['username'], completed: false, deleted: false)[todo.to_i - 1]
     else
-      @task = Todo.where(todo: todo, username: from['username'], deleted: false, completed: false)
+      @task = Todo.where(todo: todo, username: from['username'], deleted: false, completed: false).first
     end
 
-    if @task.empty?
-      response  = "👉 Afazer não encontrado, @#{from['username']}! 😱"
+    if @task.nil?
+      response = "👉 Afazer não encontrado, @#{from['username']}! 😱" if @task.nil?
       reply_with :message, text: response
+    elsif @task.update(deleted: true)
+      bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
+      response  = "✅ @#{from['username']} removeu #{@task.todo}.\n\n👉 Use /todos para ver os pendentes."    
     else
-      @task = @task.first
-      if @task.update(deleted: true)
-        bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
-        response  = "✅ @#{from['username']} removeu #{@task.todo}.\n\n👉 Use /todos para ver os pendentes."    
-      else
-        response  = "😱 Estou com mal funcionamento e não consegui remover o afazer, @#{from['username']}! Chame um humano."
-        reply_with :message, text: response
-      end
+      response  = "😱 Estou com mal funcionamento e não consegui remmover o afazer, @#{from['username']}! Chame um humano."
+      reply_with :message, text: response
     end
 
     respond_with :message, text: response
