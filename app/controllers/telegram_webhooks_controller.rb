@@ -4,31 +4,33 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
   def start(data = nil, *)
     response = from ? "🚧 Olá, #{from['username']}!\n👉 Use /help para ver o que eu posso fazer!" : "🚧 Olá, pessoas!\n👉 Usem /help para ver o que eu posso fazer!"
-    respond_with :message, text: response
+    reply_with :message, text: response
   end
 
   def help(data = nil, *)
     response = "🚧 👉 Use /todo para adicionar um afazer\n✅ 👉 Use /complete <texto do afazer> ou /complete <id do afazer> para completar um afazer\n❌ 👉 Use /remove <texto do afazer> para deletar um afazer\n📑 👉 Use /todos para listar todos seus afazeres\n⏰ 👉 Use /done para ver o que você fez nas últimas 24hrs\n🏎️ 👉 Use /leaderboard para ver os topzeras que mais fazem coisas"
-    respond_with :message, text: response
+    reply_with :message, text: response
   end
 
   def todo(*todo)
-    respond_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
+    reply_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
 
     todo = todo.join(" ")
     @task = Todo.new(todo: todo, username: from['username'] )
     
     if @task.save
+      bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
       response = "🚧 '#{todo}' adicionado para @#{from['username']}! Do it! 🚀"
     else
       response  = "😱 Estou com mal funcionamento e não consegui adicionar o afazer, @#{from['username']}! Chame um humano."
+      reply_with :message, text: response
     end
       
     respond_with :message, text: response
   end
 
   def complete(*todo)
-    respond_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
+    reply_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
 
     todo = todo.join(" ")
 
@@ -41,17 +43,20 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
     if @task.nil?
       response = "👉 Afazer não encontrado, @#{from['username']}! 😱" if @task.nil?
+      reply_with :message, text: response
     elsif @task.update(completed: true)
+      bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
       response  = "✅ @#{from['username']} completou #{@task.todo}! Keep Rocking! 🚀\n\n👉 Use /todos para ver os pendentes."    
     else
       response  = "😱 Estou com mal funcionamento e não consegui completar o afazer, @#{from['username']}! Chame um humano."
+      reply_with :message, text: response
     end
 
     respond_with :message, text: response
   end
 
   def remove(*todo)
-    respond_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
+    reply_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
 
     todo = todo.join(" ")
 
@@ -63,12 +68,15 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
     if @task.empty?
       response  = "👉 Afazer não encontrado, @#{from['username']}! 😱"
+      reply_with :message, text: response
     else
       @task = @task.first
       if @task.update(deleted: true)
+        bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
         response  = "✅ @#{from['username']} removeu #{@task.todo}.\n\n👉 Use /todos para ver os pendentes."    
       else
         response  = "😱 Estou com mal funcionamento e não consegui remover o afazer, @#{from['username']}! Chame um humano."
+        reply_with :message, text: response
       end
     end
 
@@ -76,7 +84,8 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def todos(data = nil, *)
-    respond_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
+    reply_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
+    bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
 
     @tasks = Todo.where(username: from['username'], completed: false, deleted: false)
 
@@ -101,7 +110,8 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def done(data = nil, *)
-    respond_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
+    reply_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
+    bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
 
     @tasks = Todo.where(username: from['username'], completed: true, deleted: false, updated_at: (Time.now - 24.hours)..Time.now)
 
@@ -120,10 +130,11 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       response += "\nKeep Rocking! 🚀"
     end
 
-    respond_with :message, text: response
+    reply_with :message, text: response
   end
 
   def leaderboard(data = nil, *)
+    bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
     @users = Todo.where(completed: true, deleted: false, updated_at: (Time.now - 24.hours)..Time.now).group(:username)
 
     response = "🚧 Quem mais fez coisas nas últimas 24 horas:\n"
@@ -131,8 +142,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       count = Todo.where(completed: true, deleted: false, updated_at: (Time.now - 24.hours)..Time.now, username: user.username).count
       response += "👷 #{user.username} - #{count} afazeres\n"
     end
-
-    puts @users
 
     @users = Todo.where(completed: true, deleted: false).group(:username)
     response += "\n\n🚧 Quem mais fez coisas desde sempre:\n"
