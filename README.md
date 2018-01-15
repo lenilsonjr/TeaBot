@@ -7,7 +7,15 @@ You can use it directly or add it to a group chat.
 
 # Using it
 Just send a message to [@teatodo_bot](https://t.me/teatodo_bot) on Telegram to use it.
-If you're adding it to a supergroup don't forget to make the bot admin, otherwise it will broke (by design, bot's current version deletes command messages, eg. /todo or /complete, and only shows the command output, keeping the chat clean).
+From /help:
+```
+🚧 👉 Use /todo para adicionar um afazer
+✅ 👉 Use /complete <texto do afazer> ou /complete <id do afazer> para completar um afazer
+❌ 👉 Use /remove <texto do afazer> para deletar um afazer
+📑 👉 Use /todos para listar todos seus afazeres
+⏰ 👉 Use /done para ver o que você fez nas últimas 24hrs
+🏎️ 👉 Use /leaderboard para ver os topzeras que mais fazem coisas
+```
 
 # Running up your own bot
 
