@@ -1,11 +1,11 @@
-# TeaBot
+# :robot: TeaBot
 
 TeaBot is a todo-list manager for Telegram.
 You can use it directly or add it to a group chat.
 
 ![@teatodo_bot in action](https://i.imgur.com/Wd7A8Uv.jpg)
 
-# Using it
+# :speech_balloon: Using it
 Just send a message to [@teatodo_bot](https://t.me/teatodo_bot) on Telegram to use it.
 From /help:
 ```
@@ -17,12 +17,12 @@ From /help:
 🏎️ 👉 Use /leaderboard para ver os topzeras que mais fazem coisas
 ```
 
-# Running up your own bot
+# :construction_worker: Running up your own bot
 
 ```
 git clone git@github.com:lenilsonjr/TeaBot.git
 cd TeaBot
-cp config/secrets-example.yml config/secrets.yml && cp config/database-example.yml config/database.yml
+cp config/secrets-example.yml config/secrets.yml && cp config/database-example.yml config/database.yml && cp config/environments/production-example.rb config/environments/production.rb
 bundle install
 ```
 Don't forget to setup your bot credentials on `secrets.yml`:
@@ -46,7 +46,7 @@ You're ready to go! You can use [bot poller](https://github.com/telegram-bot-rb/
 rake telegram:bot:poller
 ```
 
-# Deploying a new bot
+# :rocket: Deploying a new bot
 
 This project uses Capistrano for deployment.
 ```
@@ -54,18 +54,18 @@ cp config/deploy-example.rb config/deploy.rb && cp config/deploy/production-exam
 ```
 Edit each of these files to match your deploy info.
 
-You should create a `database.yml`, a `secrets.yml` and a `production.rb` in your server's Capistrano shared folder structure. Don't forget to edit `production.rb:27` to match your API's domain.
+You should create a `database.yml` and a `secrets.yml` in your server's Capistrano shared folder structure. Don't forget to edit `production.rb:27` to match your API's domain.
 
 Also, don't forget to edit your `Capfile` to match your stack.
 
 After configuring everything, just type `cap production deploy` and the bot will be deployed. This [guide](https://www.phusionpassenger.com/library/deploy/apache/automating_app_updates/ruby/) may help you.
 
-# Future Improvements
+# :sparkles: Future Improvements
 
 - Internationalize bot (currently it only speaks portuguese)
 - Create tests
 
-# Contributing
+# :pencil2: Contributing
 
 You know the business. Just fork the repo and send a PR with your fix or new feature.
 I made this bot in a hurry, so the code certainly can be improved. Feel free to help!
