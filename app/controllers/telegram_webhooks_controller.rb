@@ -93,7 +93,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     respond_with :message, text: response
   end
 
-  def todos(data = nil, *)
+  def todos(*tag)
     reply_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
     begin
       bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
@@ -101,7 +101,12 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       puts "Can't delete message"
     end
 
-    @tasks = Todo.where(username: from['username'], completed: false, deleted: false)
+    if ( tag.empty? )
+      @tasks = Todo.where(username: from['username'], completed: false, deleted: false)
+    else
+      tag = tag.join(" ")
+      @tasks = Todo.where(username: from['username'], completed: false, deleted: false).where("todo LIKE '%#{tag}%'")
+    end
 
     if @tasks.empty?
 
