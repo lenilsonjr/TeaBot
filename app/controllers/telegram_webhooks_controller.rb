@@ -1,105 +1,76 @@
 class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
-  around_action :with_locale
+  before_action :check_username
 
   def start(data = nil, *)
-    response = from ? "🚧 Olá, #{from['username']}!\n👉 Use /help para ver o que eu posso fazer!" : "🚧 Olá, pessoas!\n👉 Usem /help para ver o que eu posso fazer!"
+    response = I18n.t('start.response')
     reply_with :message, text: response
   end
 
   def help(data = nil, *)
-    response = "🚧 👉 Use /todo para adicionar um afazer\n✅ 👉 Use /complete <texto do afazer> ou /complete <id do afazer> para completar um afazer\n❌ 👉 Use /remove <texto do afazer> para deletar um afazer\n📑 👉 Use /todos para listar todos seus afazeres\n⏰ 👉 Use /done para ver o que você fez nas últimas 24hrs\n🏎️ 👉 Use /leaderboard para ver os topzeras que mais fazem coisas"
+    response = I18n.t('help.response')
     reply_with :message, text: response
   end
 
   def todo(*todo)
-    reply_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
 
     todo = todo.join(" ")
     @task = Todo.new(todo: todo, username: from['username'] )
     
     if @task.save
-      begin
-        bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
-      rescue Exception
-        puts "Can't delete message"
-      end
-      response = "🚧 '#{todo}' adicionado para @#{from['username']}! Do it! 🚀"
+      delete_message(chat['id'], self.payload['message_id'])
+      response = I18n.t('todo.success', username: from['username'], todo: @task.todo)
+      respond_with :message, text: response
     else
-      response  = "😱 Estou com mal funcionamento e não consegui adicionar o afazer, @#{from['username']}! Chame um humano."
+      response = I18n.t('todo.error', username: from['username'])
       reply_with :message, text: response
     end
-      
-    respond_with :message, text: response
+    
   end
 
   def complete(*todo)
-    reply_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
-
     todo = todo.join(" ")
 
     #Check if user has given an ID
-    if todo.to_s =~ /\A[-+]?\d*\.?\d+\z/
-      @task = Todo.where(username: from['username'], completed: false, deleted: false)[todo.to_i - 1]
-    else
-      @task = Todo.where(todo: todo, username: from['username'], deleted: false, completed: false).first
-    end
+    @task = todo.to_s =~ /\A[-+]?\d*\.?\d+\z/ ? Todo.find(todo.to_i) : Todo.create(todo: todo, username: from['username'])
 
-    if @task.nil?
-      response = "👉 Afazer não encontrado, @#{from['username']}! 😱" if @task.nil?
-      reply_with :message, text: response
-    elsif @task.update(completed: true)
-      begin
-        bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
-      rescue Exception
-        puts "Can't delete message"
-      end
-      response  = "✅ @#{from['username']} completou #{@task.todo}! Keep Rocking! 🚀\n\n👉 Use /todos para ver os pendentes."    
+    if @task.update(completed: true)
+      delete_message(chat['id'], self.payload['message_id'])
+      response = I18n.t('complete.success', username: from['username'], todo: @task.todo)
+      respond_with :message, text: response
     else
-      response  = "😱 Estou com mal funcionamento e não consegui completar o afazer, @#{from['username']}! Chame um humano."
+      response = I18n.t('complete.error', username: from['username'])
       reply_with :message, text: response
     end
 
-    respond_with :message, text: response
   end
 
   def remove(*todo)
-    reply_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
-
     todo = todo.join(" ")
 
     #Check if user has given an ID
     if todo.to_s =~ /\A[-+]?\d*\.?\d+\z/
-      @task = Todo.where(username: from['username'], completed: false, deleted: false)[todo.to_i - 1]
+      @task = Todo.find(todo.to_i)
     else
       @task = Todo.where(todo: todo, username: from['username'], deleted: false, completed: false).first
     end
 
     if @task.nil?
-      response = "👉 Afazer não encontrado, @#{from['username']}! 😱" if @task.nil?
+      response = I18n.t('not_found', username: from['username']) if @task.nil?
       reply_with :message, text: response
     elsif @task.update(deleted: true)
-      begin
-        bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
-      rescue Exception
-        puts "Can't delete message"
-      end
-      response  = "✅ @#{from['username']} removeu #{@task.todo}.\n\n👉 Use /todos para ver os pendentes."    
+      delete_message(chat['id'], self.payload['message_id'])
+      response = I18n.t('remove.success', username: from['username'], todo: @task.todo)
+      respond_with :message, text: response
     else
-      response  = "😱 Estou com mal funcionamento e não consegui remmover o afazer, @#{from['username']}! Chame um humano."
+      response = I18n.t('remove.error', username: from['username'])
       reply_with :message, text: response
     end
 
-    respond_with :message, text: response
   end
 
   def todos(*tag)
-    reply_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
-    begin
-      bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
-    rescue Exception
-      puts "Can't delete message"
-    end
+    delete_message(chat['id'], self.payload['message_id'])
 
     if ( tag.empty? )
       @tasks = Todo.where(username: from['username'], completed: false, deleted: false)
@@ -110,106 +81,89 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
     if @tasks.empty?
 
-      response = "⚠️ Você não tem nenhum afazer, @#{from['username']}!\n\nDeixe de ser vagabundo e adicione um usando /todo <afazer> 🚧"
+      response = I18n.t('todos.not_found', username: from['username'])
 
     else
 
-      response  = "👉 Esses são seus afazeres, @#{from['username']}:\n\n"
+      response = I18n.t('todos.headline', username: from['username'])
 
-      i = 1
       @tasks.each do |todo|        
-        response += "🚧 #{i} - #{todo.todo}, adicionado #{relative_date(todo.created_at.to_date)}.\n"
-        i = i + 1
+        response += I18n.t('todos.task', id: todo.id, todo: todo.todo, date: relative_date(todo.created_at.to_date))
       end
 
-      response += "\nGo do it! 🚀"
+      response += I18n.t('todos.end')
     end
 
     respond_with :message, text: response
   end
 
   def done(data = nil, *)
-    reply_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
-    begin
-      bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
-    rescue Exception
-      puts "Can't delete message"
-    end
+    delete_message(chat['id'], self.payload['message_id'])
 
     @tasks = Todo.where(username: from['username'], completed: true, deleted: false, updated_at: (Time.now - 24.hours)..Time.now)
 
     if @tasks.empty?
 
-      response = "⚠️ Você não fez nada nas últimas 24hrs, @#{from['username']}!\n\nDeixe de ser vagabundo e use /todos para ver seus afazeres 🚧"
+      response = I18n.t('done.not_found', username: from['username'])
 
     else
 
-      response  = "👉 Você completou #{@tasks.count} afazeres nas últimas 24hrs, @#{from['username']}:\n\n"
+      response = I18n.t('done.headline', username: from['username'], count: @tasks.count)
 
       @tasks.each do |todo|        
-        response += "✅ #{todo.todo}, adicionado #{relative_date(todo.created_at.to_date)}.\n"
+        response += I18n.t('done.task', todo: todo.todo, date: relative_date(todo.created_at.to_date))
       end
 
-      response += "\nKeep Rocking! 🚀"
+      response += I18n.t('done.end')
     end
 
     respond_with :message, text: response
   end
 
   def leaderboard(data = nil, *)
-    begin
-      bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
-    rescue Exception
-      puts "Can't delete message"
-    end
     @users = Todo.where(completed: true, deleted: false, updated_at: (Time.now - 24.hours)..Time.now).group(:username).limit(10)
 
-    response = "🚧 Quem mais fez coisas nas últimas 24 horas:\n"
+    response = I18n.t('leaderboard.headline_one')
+
     @users.reverse.each do |user|
       count = Todo.where(completed: true, deleted: false, updated_at: (Time.now - 24.hours)..Time.now, username: user.username).count
-      response += "👷 @#{user.username} - #{count} afazeres\n"
+      response += I18n.t('leaderboard.entry', username: user.username, count: count)
     end
 
     @users = Todo.where(completed: true, deleted: false).group(:username).limit(10)
-    response += "\n\n🚧 Quem mais fez coisas desde sempre:\n"
+    response += I18n.t('leaderboard.headline_two')
     @users.reverse.each do |user|
       count = Todo.where(completed: true, deleted: false, username: user.username).count
-      response += "👷 @#{user.username} - #{count} afazeres\n"
+      response += I18n.t('leaderboard.entry', username: user.username, count: count)
     end
 
-    response += "\nKeep Rocking! 🚀"
+    response += I18n.t('leaderboard.end')
 
-    respond_with :message, text: response
+    reply_with :message, text: response
   end
 
 
   def undo(data = nil, *)
-    reply_with :message, text: "🕵️ Olá, fulano misterioso. Crie um user antes de usar o bot" if from['username'].empty?
 
     @task = Todo.where(completed: true, deleted: false, updated_at: (Time.now - 24.hours)..Time.now, username: from['username']).order("updated_at DESC").limit(1).first
 
     if @task.nil?
-      response = "👉 Afazer não encontrado, @#{from['username']}! 😱" if @task.nil?
+      response = I18n.t('not_found', username: from['username']) if @task.nil?
       reply_with :message, text: response
     elsif @task.update(completed: false, deleted: false)
-      begin
-        bot.delete_message(chat_id: chat['id'], message_id: self.payload['message_id']) if chat['type'] == 'supergroup'
-      rescue Exception
-        puts "Can't delete message"
-      end
-      response  = "✅ @#{from['username']} desfez #{@task.todo}!\n\n👉 Use /todos para ver os pendentes."    
+      delete_message(chat['id'], self.payload['message_id'])
+      response = I18n.t('undo.success', username: from['username'], todo: @task.todo)
+      respond_with :message, text: response
     else
-      response  = "😱 Estou com mal funcionamento e não consegui desfazer o afazer, @#{from['username']}! Chame um humano."
+      response = I18n.t('undo.error', username: from['username'])
       reply_with :message, text: response
     end
 
-    respond_with :message, text: response
   end
 
   private
 
     def relative_date(date)
-
       if date.nil?
         "fora do contínuo espaço e tempo"
       elsif date == Time.current.to_date
@@ -226,19 +180,21 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
         else
           l(date, format: 'dia %-d de %B de %Y').downcase
         end
-      end  
-
+      end
     end
 
-    def with_locale(&block)
-      I18n.with_locale(locale_for_update, &block)
+    def delete_message(chat_id, message_id)
+      begin
+        bot.delete_message(chat_id: chat_id, message_id: message_id) if chat['type'] == 'supergroup'
+      rescue Exception
+        puts "Can't delete message"
+      end
     end
-  
-    def locale_for_update
-      if from
-        # locale for user
-      elsif chat
-        # locale for chat
+
+    def check_username
+      if from['username'].empty? || from['username'].nil?
+        reply_with :message, text: I18n.t('anonymous')
+        throw :halt
       end
     end
 

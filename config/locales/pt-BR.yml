@@ -1,0 +1,34 @@
+pt-BR:
+  anonymous: "🕵️ Olá, fulano misterioso. Defina um user no Telegram antes de usar o bot"
+  not_found: "👉 Afazer não encontrado, @%{username}! 😱"
+  start:
+    response: "🚧 Olá, @%{from['username']}!\n👉 Use /help para ver o que eu posso fazer!"
+  help:
+    respone: "🚧 👉 Use /todo para adicionar um afazer\n✅ 👉 Use /complete <texto do afazer> ou /complete <id do afazer> para completar um afazer\n❌ 👉 Use /remove <texto do afazer> para deletar um afazer\n📑 👉 Use /todos para listar todos seus afazeres\n⏰ 👉 Use /done para ver o que você fez nas últimas 24hrs\n🏎️ 👉 Use /leaderboard para ver os topzeras que mais fazem coisas"
+  todo:
+    success: "🚧 '%{todo}' adicionado para @%{username}! Do it! 🚀"
+    error: "😱 Estou com mal funcionamento e não consegui adicionar o afazer, @%{username}! Chame um humano."
+  complete:
+    success: "✅ @%{username} completou %{todo}! Keep Rocking! 🚀\n\n👉 Use /todos para ver os pendentes."
+    error: "😱 Estou com mal funcionamento e não consegui completar o afazer, @%{username}! Chame um humano."
+  remove:
+    success: "✅ @%{username} removeu %{todo}.\n\n👉 Use /todos para ver os pendentes."
+    error: "😱 Estou com mal funcionamento e não consegui remmover o afazer, @%{username}! Chame um humano."
+  undo:
+    success: "✅ @%{username} desfez %{todo}!\n\n👉 Use /todos para ver os pendentes."
+    error: "😱 Estou com mal funcionamento e não consegui desfazer o afazer, @%{username}! Chame um humano."
+  todos:
+    not_found: "⚠️ Você não tem nenhum afazer, @%{username}!\n\nDeixe de ser vagabundo e adicione um usando /todo <afazer> 🚧"
+    headline: "👉 Esses são seus afazeres, @%{username}:\n\n"
+    task: "%{id} - 🚧 %{todo}, adicionado %{date}.\n"
+    end: "\nGo do it! 🚀"
+  done:
+    not_found: "⚠️ Você não fez nada nas últimas 24hrs, @%{username}!\n\nDeixe de ser vagabundo e use /todos para ver seus afazeres 🚧"
+    headline: "👉 Você completou %{count} afazeres nas últimas 24hrs, @%{username}:\n\n"
+    task: "✅ %{todo}, adicionado %{date}.\n"
+    end: "\nKeep Rocking! 🚀"
+  leaderboard: 
+    headline_one: "🚧 Quem mais fez coisas nas últimas 24 horas:\n"
+    headline_two: "\n\n🚧 Quem mais fez coisas desde sempre:\n"
+    entry: "👷 @%{username} - %{count} afazeres\n"
+    end: "\nKeep Rocking! 🚀"
