@@ -194,7 +194,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     def check_username
       if from['username'].nil? || from['username'].empty? 
         reply_with :message, text: I18n.t('anonymous')
-        throw :halt
+        throw :abort
       end
     end
 
