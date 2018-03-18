@@ -1,6 +1,6 @@
 class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
-  before_action :check_username
+  before_action :check_username, except: [ :clapclap ]
 
   def start(data = nil, *)
     response = I18n.t('start.response')
@@ -159,6 +159,10 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       reply_with :message, text: response
     end
 
+  end
+
+  def clapclap
+    respond_with :message, text: '👏👏👏👏👏👏'
   end
 
   private
