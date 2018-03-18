@@ -3,7 +3,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   before_action :check_username, except: [ :clapclap ]
 
   def message(message)
-    if message = ':laranja:'
+    if message == ':laranja:'
       reply_with :photo, photo: File.open(Rails.root.join('public', 'laranja.jpg'))
     end
   end
